@@ -1,0 +1,23 @@
+{
+  "name": "oncxchatserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uytran36/OnCXChatServer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/uytran36/OnCXChatServer/issues"
+  },
+  "homepage": "https://github.com/uytran36/OnCXChatServer#readme",
+  "dependencies": {
+    "@stomp/stompjs": "^6.1.2",
+    "ws": "^8.11.0"
+  }
+}
