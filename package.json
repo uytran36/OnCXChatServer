@@ -18,6 +18,9 @@
   "homepage": "https://github.com/uytran36/OnCXChatServer#readme",
   "dependencies": {
     "@stomp/stompjs": "^6.1.2",
+    "firebase-admin": "^11.3.0",
+    "http": "^0.0.1-security",
     "ws": "^8.11.0"
-  }
+  },
+  "type": "module"
 }

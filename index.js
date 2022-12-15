@@ -1,8 +1,10 @@
-const http = require('http');
+import http from 'http';
+import ws from 'ws';
+import NewSetupSocket from './src/stomp.js';
 
-Object.assign(global, { WebSocket: require('ws') });
+Object.assign(global, { WebSocket: ws });
 
-const NewSetupSocket = require('./src/stomp');
+// const NewSetupSocket = require('./src/stomp');
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -13,7 +15,7 @@ const server = http.createServer((req, res) => {
   res.end('Hello World');
 });
 
-server.listen(port, hostname, () => {
+server.listen(port, hostname, async () => {
   NewSetupSocket.onConnect();
   console.log(`Server running at http://${hostname}:${port}/`);
 });

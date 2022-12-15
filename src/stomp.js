@@ -1,7 +1,18 @@
-const stomp = require('@stomp/stompjs');
+// const stomp = require('@stomp/stompjs');
+// const sendToDevice = require('./pushNotiFunction');
+import stomp from '@stomp/stompjs';
+import { admin } from './helper.js';
+import {
+  sendToDevice,
+  subscribeTopic,
+  unsubscribeTopic,
+  unsubscribeTopicWithToken,
+  getId
+} from './pushNotiFunction.js';
 
+const userId = '62c55d9e7157a97befeb2b9e';
 const token =
-  'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1eXRrZyIsImF1dGhvcml0aWVzIjpbImdhTGpGeiJdLCJzZXNzaW9uSWQiOiIzMTRhMTdlYi01NTVmLTQ3YWQtYmI3MS00MmU3NjI3YmZhMWIiLCJpYXQiOjE2NzA5MDMxNzEsImV4cCI6MTY3MDk4OTU3MX0.z8NkY6sPgXFNQ9CPZwqTjxwk5QGZpAimpuvysbiENNeSEOEVxgUfRO1emwe5euBHioBiL1cvnflb1foCW_ty9A';
+  'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwaGlsayIsImF1dGhvcml0aWVzIjpbImdhTGpGeiJdLCJzZXNzaW9uSWQiOiI3ZGVhMTFmYS0xNGY3LTQ0OGQtOTRhNC04YWU0MmQ2NjIzZDkiLCJpYXQiOjE2NzEwODI1MTEsImV4cCI6MTY3MTE2ODkxMX0.OomysJFelPf0kLFSqGZoYBoX9rmWHa3lqHjWrx7Jn6EohJYDX01--FGBH0ED4jdoQLvF0FUWglo-AFa1r-51vA';
 const REACT_APP_WEBSOCKET_SSL = 'wss://backend.stg.oncx.vn/websocket-chat';
 
 class SetupSocket {
@@ -25,6 +36,7 @@ class SetupSocket {
     if (this.StompClient) {
       this.StompClient.deactivate();
       this.isConnected = false;
+      unsubscribeTopic();
     }
   }
 
@@ -45,11 +57,32 @@ class SetupSocket {
           },
           onConnect: () => {
             console.log('connected socket');
+            subscribeTopic();
             if (this.StompClient.connected) {
-              this.StompClient.subscribe(`/topic/event-room`, message => {
+              this.StompClient.subscribe(`/topic/event-room`, async message => {
+                subscribeTopic();
                 if (message?.body) {
                   const body = JSON.parse(message.body);
-                  console.log(body);
+                  const { room } = body;
+                  const ids = await getId();
+                  if (ids?.includes(room?.lastMessage?.senderId)) {
+                    admin
+                    .firestore()
+                    .collection('tokenNotification')
+                    .where('id', '==', room?.lastMessage?.senderId)
+                    .get()
+                    .then(async res => {
+                      // res.docs.map(x => {
+                      //   unsubscribeTopicWithToken([`${x.data().token}`])
+                      // });
+                      await unsubscribeTopicWithToken(res.docs.map(x => x.data().token))
+                    })
+                  }
+                  await sendToDevice(
+                    `${room?.lastMessage?.senderName} gửi tới ${room?.roomName}`,
+                    `${room?.lastMessage?.text}`,
+                    room || {},
+                  );
                 }
               });
             }
@@ -57,6 +90,7 @@ class SetupSocket {
           onStompError: frame => {
             console.log('Broker reported error: ' + frame.headers['message']);
             console.log('Additional details: ' + frame.body);
+            unsubscribeTopic();
           },
         });
         this.StompClient.activate();
@@ -69,4 +103,4 @@ class SetupSocket {
 
 const NewSetupSocket = new SetupSocket();
 
-module.exports = NewSetupSocket;
+export default NewSetupSocket;
